@@ -33,6 +33,7 @@ parser.add_argument('--batch-size', type=int, default=0,
                      help='Batch size to use for benchmarking. Example: 32, 64, 128.'
                           'By default, runs benchmark for batch sizes - 1, 32, 64, 128, 256')
 parser.add_argument('--dev', type=str, default='gpu')
+parser.add_argument('--latency', type=bool, default=False)
 opt = parser.parse_args()
 
 def onnx():
@@ -45,9 +46,12 @@ def onnx():
     save_dict.update({('aux:%s' % k): v.as_in_context(mx.cpu(0)) for k, v in aux.items()})
     mx.nd.save("./model/torch.params", save_dict)
 
-def score(dev, batch_size, num_batches):
+def score(dev, latency, batch_size, num_batches):
     sym1, sym2 = East(isTrain=False)
     sym = mx.sym.Group([sym1, sym2])
+
+    if 'cpu' in str(dev):
+       sym = sym.get_backend_symbol('MKLDNN')
     # sym.save("mxnet-vgg.json")
     # sym, arg, aux = onnx_mxnet.import_model("test.onnx")
 
@@ -71,13 +75,15 @@ def score(dev, batch_size, num_batches):
         for output in mod.get_outputs():
             output.wait_to_read()
 
+    if latency:
+        logging.info('latency: %f ms', (time.time() - tic) / num_batches * 1000)
     # return num images per second
     return num_batches * batch_size / (time.time() - tic)
 
 
 if __name__ == '__main__':
     if opt.batch_size == 0:
-        batch_sizes = [1, 4, 8, 16, 32]
+        batch_sizes = [1, 4, 8, 16, 32, 64, 128]
     else:
         batch_sizes = [opt.batch_size]
 
@@ -92,5 +98,5 @@ if __name__ == '__main__':
     for d in devs:
         logging.info('device: %s', d)
         for b in batch_sizes:
-            speed = score(dev=d, batch_size=b, num_batches=10)
+            speed = score(dev=d, latency=opt.latency, batch_size=b, num_batches=10)
             logging.info('batch size %2d, dtype %s, images/sec: %f', b, dtype, speed)
