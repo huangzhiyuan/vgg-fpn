@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser(description='SymbolAPI-based vgg11FPN inference
 parser.add_argument('--batch-size', type=int, default=0,
                      help='Batch size to use for benchmarking. Example: 32, 64, 128.'
                           'By default, runs benchmark for batch sizes - 1, 32, 64, 128, 256')
-parser.add_argument('--dev', type=str, default='gpu')
+parser.add_argument('--dev', type=str, default='cpu')
 parser.add_argument('--latency', type=bool, default=False)
 opt = parser.parse_args()
 
@@ -67,7 +67,7 @@ def score(dev, latency, batch_size, num_batches):
     batch = mx.io.DataBatch(data, []) # empty label
 
     # run
-    dry_run = 5                 # use 5 iterations to warm up
+    dry_run = 0                 # use 5 iterations to warm up
     for i in range(dry_run + num_batches):
         if i == dry_run:
             tic = time.time()
@@ -78,6 +78,7 @@ def score(dev, latency, batch_size, num_batches):
     if latency:
         logging.info('latency: %f ms', (time.time() - tic) / num_batches * 1000)
     # return num images per second
+    logging.info('all time: %f sec', (time.time() - tic))
     return num_batches * batch_size / (time.time() - tic)
 
 
@@ -98,5 +99,5 @@ if __name__ == '__main__':
     for d in devs:
         logging.info('device: %s', d)
         for b in batch_sizes:
-            speed = score(dev=d, latency=opt.latency, batch_size=b, num_batches=10)
+            speed = score(dev=d, latency=opt.latency, batch_size=b, num_batches=50)
             logging.info('batch size %2d, dtype %s, images/sec: %f', b, dtype, speed)

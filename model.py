@@ -122,10 +122,3 @@ def East(feat_stride=4, isTrain=True):
 
     return cls_preds, link_preds
 
-# shape = (1, 3, 1024, 1024)
-# data = mx.symbol.Variable('data')
-# cls_preds, link_preds = East(data)
-# graph = mx.viz.plot_network(cls_preds, save_format='png', hide_weights=True)
-# graph.render('cls_preds')
-# graph = mx.viz.plot_network(link_preds, save_format='png', hide_weights=True)
-# graph.render('link_preds')
