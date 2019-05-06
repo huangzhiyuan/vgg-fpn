@@ -78,7 +78,6 @@ def score(dev, latency, batch_size, num_batches):
     if latency:
         logging.info('latency: %f ms', (time.time() - tic) / num_batches * 1000)
     # return num images per second
-    logging.info('all time: %f sec', (time.time() - tic))
     return num_batches * batch_size / (time.time() - tic)
 
 
