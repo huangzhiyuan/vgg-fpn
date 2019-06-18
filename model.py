@@ -73,6 +73,7 @@ def _make_head(x, out_planes):
 
 def East(feat_stride=4, isTrain=True):
     input = mx.sym.var('data')
+    input = mx.sym.Variable('data')
     _, f = VGG11bn(input)
     # bs 2048 w/32 h/32
     h = f[3]
@@ -112,7 +113,7 @@ def East(feat_stride=4, isTrain=True):
     c = mx.symbol.Convolution(r, num_filter=32, kernel=(3,3), stride=(1,1), pad=(1,1))
     b = mx.symbol.BatchNorm(c)
     r = mx.symbol.Activation(b, act_type='relu')
-    c = mx.symbol.Convolution(r, num_filter=64, kernel=(3,3), stride=(1,1), pad=(1,1))
+    c = mx.symbol.Convolution(r, num_filter=32, kernel=(3,3), stride=(1,1), pad=(1,1))
     b = mx.symbol.BatchNorm(c)
     r = mx.symbol.Activation(b, act_type='relu')
 
@@ -121,4 +122,3 @@ def East(feat_stride=4, isTrain=True):
     cls_preds = MyAdaptiveAvgPool2d(cls_preds)
 
     return cls_preds, link_preds
-
