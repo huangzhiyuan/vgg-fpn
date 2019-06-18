@@ -73,7 +73,6 @@ def _make_head(x, out_planes):
 
 def East(feat_stride=4, isTrain=True):
     input = mx.sym.var('data')
-    input = mx.sym.Variable('data')
     _, f = VGG11bn(input)
     # bs 2048 w/32 h/32
     h = f[3]
