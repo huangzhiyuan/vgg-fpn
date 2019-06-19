@@ -29,11 +29,11 @@ from model import East
 logging.basicConfig(level=logging.DEBUG)
 
 parser = argparse.ArgumentParser(description='SymbolAPI-based vgg11FPN inference performance benchmark')
-parser.add_argument('--batch-size', type=int, default=0,
+parser.add_argument('--batch-size', type=int, default=1,
                      help='Batch size to use for benchmarking. Example: 32, 64, 128.'
                           'By default, runs benchmark for batch sizes - 1, 32, 64, 128, 256')
 parser.add_argument('--dev', type=str, default='cpu')
-parser.add_argument('--latency', type=bool, default=False)
+parser.add_argument('--latency', type=bool, default=True)
 opt = parser.parse_args()
 
 def onnx():
@@ -52,7 +52,6 @@ def score(dev, latency, batch_size, num_batches):
 
     if 'cpu' in str(dev):
        sym = sym.get_backend_symbol('MKLDNN')
-    # sym.save("mxnet-vgg.json")
     # sym, arg, aux = onnx_mxnet.import_model("test.onnx")
 
     data_shape = [('data', (batch_size, 3, 1024, 1024))]
@@ -60,14 +59,14 @@ def score(dev, latency, batch_size, num_batches):
     mod.bind(for_training     = False,
              inputs_need_grad=False,
              data_shapes=data_shape)
-    mod.init_params()
+    mod.init_params(initializer=mx.init.Xavier(magnitude=2.))
 
     # get data
     data = [mx.random.uniform(-1.0, 1.0, shape=shape, ctx=dev) for _, shape in mod.data_shapes]
     batch = mx.io.DataBatch(data, []) # empty label
 
     # run
-    dry_run = 0                 # use 5 iterations to warm up
+    dry_run = 5                 # use 5 iterations to warm up
     for i in range(dry_run + num_batches):
         if i == dry_run:
             tic = time.time()
